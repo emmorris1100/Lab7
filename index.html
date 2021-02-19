@@ -105,8 +105,9 @@
         }
       }
 
+      /* Fetches and outputs content at a given url */
       function fetchPnt(pnt) {
-        fetch(pnt).then(function(response) {
+        fetch(pnt).then(response => {
           if (response.ok) {
             return response.text().then(function(text) {
               document.getElementById('output').textContent = text;
@@ -122,7 +123,10 @@
       // The main difference from updateRecord() will be the URL you send data to; check
       // the writeup to view the URL pattern for create and update
       function createRecord() {
-        showForm();
+        if(arguments[0] == 'show') {
+          showForm();
+          clearInputs();
+        }
 
         if(arguments[0] == 'submit') {
           let endpoint = document.getElementById('endpoint').value;
@@ -139,34 +143,27 @@
       // The main difference from createRecord() will be the URL you send data to; check
       // the writeup to view the URL pattern for create and update
       function updateRecord() {
-        showForm();
-        showId();
+        if(arguments[0] == 'show') {
+          showForm();
+          showId();
+          clearInputs();
+        }
 
         if(arguments[0] == 'submit') {
-          let endpoint = document.getElementById('endpoint').value + '/' + document.getElementById('recordID').value;
+          let id = document.getElementById('recordID').value;
+
+          if (isNaN(id) || id == null || id == '') {
+            document.getElementById('output').textContent = 'Error: Enter a valid ID';
+          return;
+          }
+
+          let endpoint = document.getElementById('endpoint').value + '/' + id;
 
           let author = document.getElementById('author').value;
           let title = document.getElementById('title').value;
 
           pushPut('put', endpoint, author, title);
         }
-      }
-
-      function pushPut(post_put, endpoint, title, author) {
-        fetch(endpoint, {
-          method: post_put,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ 'title': title, 'author': author }),
-        })
-          .then(response => response.json())
-            .then(data => {
-              document.getElementById('output').textContent = JSON.stringify(data);
-            })
-            .catch((error) => {
-              document.getElementById('output').textContent = 'Network Error: ' + response.status;
-            });
       }
 
       // This function should use fetch to delete one existing entry in the given endpoint.
@@ -186,6 +183,29 @@
         }
       }
 
+      function pushPut(post_put, endpoint, title, author) {
+        fetch(endpoint, {
+          method: post_put,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 'title': title, 'author': author }),
+        })
+          .then(response => {
+            if (typeof response !== 'undefined' && response.ok) {
+              return response.text().then(function(text) {
+                document.getElementById('output').textContent = text;
+              });
+            } else {
+              document.getElementById('output').textContent = 'Network Error: ' + response.status;
+            }
+          })
+          .catch((error) => {
+            document.getElementById('output').textContent = 'Network Error: ' + response.status;
+          });
+      }
+
+      /* Simple UI hide/show functions stockpile */
       function hideForm() {
         document.getElementById('recordForm').style.display = 'none';
         hideId();
@@ -193,6 +213,7 @@
 
       function showForm() {
         document.getElementById('recordForm').style.display = 'block';
+        hideId();
       }
 
       function hideId() {
@@ -203,8 +224,15 @@
         document.getElementById('recordIDcontainer').style.display = 'block';
       }
 
+      /* Simple clear input/output functions */
       function clearOutput() {
         document.getElementById('output').textContent = '';
+      }
+
+      function clearInputs() {
+        document.getElementById('author').value = '';
+        document.getElementById('title').value = '';
+        document.getElementById('recordID').value = '';
       }
 
       window.addEventListener('DOMContentLoaded', () => {
