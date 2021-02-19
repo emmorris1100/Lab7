@@ -85,12 +85,8 @@
       // the writeup to view the URL pattern for fetch one and fetch all
       function fetchAll() {
         let endpoint = document.getElementById('endpoint').value;
-        
-        fetch(endpoint).then(function(response) {
-          return response.text().then(function(text) {
-            document.getElementById('output').textContent = text;
-          });
-        });
+
+        fetchPnt(endpoint);
       }
 
       // This function should fetch one entry from the given endpoint.
@@ -98,7 +94,27 @@
       // The main difference from fetchAll() will be the URL you request from; check
       // the writeup to view the URL pattern for fetch one and fetch all
       function fetchOne() {
-        // TODO
+        let id = prompt("Enter record id");
+
+        if (isNaN(id) || id == null || id == '') {
+          document.getElementById('output').textContent = 'Error: Not a valid ID';
+          return;
+        } else {
+          let endpoint = document.getElementById('endpoint').value + '/' + id;
+          fetchPnt(endpoint);
+        }
+      }
+
+      function fetchPnt(pnt) {
+        fetch(pnt).then(function(response) {
+          if (response.ok) {
+            return response.text().then(function(text) {
+              document.getElementById('output').textContent = text;
+            });
+          } else {
+            document.getElementById('output').textContent = 'Network Error: ' + response.status;
+          }
+        });
       }
 
       // This function should use fetch to create one entry in the given endpoint.
@@ -106,7 +122,16 @@
       // The main difference from updateRecord() will be the URL you send data to; check
       // the writeup to view the URL pattern for create and update
       function createRecord() {
-        // TODO
+        showForm();
+
+        if(arguments[0] == 'submit') {
+          let endpoint = document.getElementById('endpoint').value;
+
+          let author = document.getElementById('author').value;
+          let title = document.getElementById('title').value;
+
+          pushPut('post', endpoint, author, title);
+        }
       }
 
       // This function should use fetch to update one existing entry in the given endpoint.
@@ -114,7 +139,34 @@
       // The main difference from createRecord() will be the URL you send data to; check
       // the writeup to view the URL pattern for create and update
       function updateRecord() {
-        // TODO
+        showForm();
+        showId();
+
+        if(arguments[0] == 'submit') {
+          let endpoint = document.getElementById('endpoint').value + '/' + document.getElementById('recordID').value;
+
+          let author = document.getElementById('author').value;
+          let title = document.getElementById('title').value;
+
+          pushPut('put', endpoint, author, title);
+        }
+      }
+
+      function pushPut(post_put, endpoint, title, author) {
+        fetch(endpoint, {
+          method: post_put,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 'title': title, 'author': author }),
+        })
+          .then(response => response.json())
+            .then(data => {
+              document.getElementById('output').textContent = JSON.stringify(data);
+            })
+            .catch((error) => {
+              document.getElementById('output').textContent = 'Network Error: ' + response.status;
+            });
       }
 
       // This function should use fetch to delete one existing entry in the given endpoint.
@@ -123,7 +175,36 @@
       // request; check the writeup to view the URL pattern for get one and delete. THERE IS NO 
       // delete all, only delete one.
       function deleteRecord() {
-        // TODO
+        let id = prompt("Enter record id");
+
+        if (isNaN(id) || id == null || id == '') {
+          document.getElementById('output').textContent = 'Error: Not a valid ID';
+          return;
+        } else {
+          let endpoint = document.getElementById('endpoint').value + '/' + id;
+          pushPut('delete', endpoint);
+        }
+      }
+
+      function hideForm() {
+        document.getElementById('recordForm').style.display = 'none';
+        hideId();
+      }
+
+      function showForm() {
+        document.getElementById('recordForm').style.display = 'block';
+      }
+
+      function hideId() {
+        document.getElementById('recordIDcontainer').style.display = 'none';
+      }
+
+      function showId() {
+        document.getElementById('recordIDcontainer').style.display = 'block';
+      }
+
+      function clearOutput() {
+        document.getElementById('output').textContent = '';
       }
 
       window.addEventListener('DOMContentLoaded', () => {
@@ -133,6 +214,9 @@
           .addEventListener("submit", event => {
             event.preventDefault();
             let command = document.getElementById('action').value;
+
+            hideForm();
+            clearOutput();
 
             switch (command) {
               case "List All":
